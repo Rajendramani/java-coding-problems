@@ -9,7 +9,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @ToString
-class Employee {
+public class Employee {
     private int id;
     private String name;
     private String dept;

@@ -2,6 +2,7 @@ package streams;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /*
@@ -15,27 +16,22 @@ Name:XYS, Department:Finance, Salary:65000.0
 public class Problem4 {
 
     public static void main(String[] args) {
-        //Normal approach
-        Map<String, Employee> employeeMap = Employee.getEmployeeList().stream()
-                .collect(Collectors.groupingBy(Employee::getDept,
-                        Collectors.collectingAndThen(Collectors.toList(),
-                                list -> {
-                                    if (list.size() < 2) return null;
-                                    list.sort(Comparator.comparingDouble(Employee::getSalary).reversed());
-                                    return list.get(1);
-                                })));
 
-        //Best approach
-        Map<String, Employee> employeeMap1 = Employee.getEmployeeList().stream()
+        Map<String, Employee> records = Employee.getEmployeeList().stream()
                 .collect(Collectors.groupingBy(Employee::getDept))
                 .entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                v -> v.getValue().stream()
-                                        .sorted(Comparator.comparingDouble(Employee::getSalary).reversed())
-                                        .skip(1)
-                                        .findFirst()
-                                        .orElse(null)));
+                .map( entry -> {
+                    Optional<Employee> secondHighestSalary = entry.getValue().stream()
+                            .sorted(Comparator.comparingDouble(Employee::getSalary).reversed())
+                            .skip(1)
+                            .findFirst();
+                    return secondHighestSalary.map(emp -> Map.entry(entry.getKey(), emp));
+                })
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        employeeMap1.forEach((k, v) -> System.out.println("Dept: " + k + "- Employee: " + v.toString()));
+        records.forEach((k,v) -> System.out.println("Dept: "+ k + " - " + "Employee: " +v));
+
     }
 }
